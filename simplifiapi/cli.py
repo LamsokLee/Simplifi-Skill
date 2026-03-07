@@ -5,7 +5,7 @@ import sys
 import configargparse
 from pandas import json_normalize
 
-from simplifiapi.client import Client
+from simplifiapi.client import Client, load_cached_token
 
 logger = logging.getLogger("simplifiapi")
 
@@ -76,13 +76,19 @@ def main():
     client = Client()
 
     token = options.token
-    if (not token):
-        token = client.get_token(
-            email=options.email, password=options.password)
-
-    if (client.verify_token(token) == False):
-        logger.error("Unable to log in simplifi.")
-        return
+    if not token:
+        token = load_cached_token()
+    if token and client.verify_token(token):
+        pass
+    else:
+        token = None
+        if options.email and options.password:
+            token = client.get_token(
+                email=options.email, password=options.password
+            )
+        if not token or not client.verify_token(token):
+            logger.error("Unable to log in simplifi.")
+            return
 
     # Retrieve first dataset
     # TODO: Support multiple datasets

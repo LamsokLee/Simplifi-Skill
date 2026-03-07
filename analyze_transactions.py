@@ -411,12 +411,20 @@ def main() -> None:
         print("No rows in CSV.", file=sys.stderr)
         sys.exit(0)
 
-    # Exclude transactions from accounts whose type is INVESTMENT (from output_accounts.json)
+    # Require accounts file (exclude INVESTMENT accounts)
+    accounts_path = Path(args.accounts_file)
+    if not accounts_path.exists():
+        print(f"Error: accounts file not found: {accounts_path}", file=sys.stderr)
+        sys.exit(1)
     exclude_account_ids = load_investment_account_ids(args.accounts_file)
     if exclude_account_ids:
         print(f"Excluding {len(exclude_account_ids)} investment account(s) from {args.accounts_file}", file=sys.stderr)
 
-    # Load category id -> { name, type } (from output_categories.json)
+    # Require categories file (names and expense/income sections)
+    categories_path = Path(args.categories_file)
+    if not categories_path.exists():
+        print(f"Error: categories file not found: {categories_path}", file=sys.stderr)
+        sys.exit(1)
     category_info = load_category_info(args.categories_file)
     category_names = {cid: d["name"] for cid, d in category_info.items()} if category_info else {}
     # Exclude transactions whose category is not in the categories file

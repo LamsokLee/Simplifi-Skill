@@ -1,0 +1,53 @@
+# OpenClaw Skill: Quicken Simplifi API
+# https://docs.openclaw.ai/tools/creating-skills
+name: quicken-simplifi
+version: 1.0.0
+author: simplifiapi
+description: |
+  Fetch accounts, transactions, tags, and categories from Quicken Simplifi.
+  Supports login with token or email/password; on macOS can read 2FA codes
+  from Apple iMessage. Use when the user wants Simplifi data, export
+  transactions, or sync with Quicken Simplifi.
+license: MIT
+
+permissions:
+  - network
+  - filesystem
+
+config:
+  token:
+    type: string
+    required: false
+    description: "Quicken Simplifi OAuth token (skips MFA if provided)"
+    secret: true
+  email:
+    type: string
+    required: false
+    description: "Simplifi account email (use with password for login)"
+  password:
+    type: string
+    required: false
+    description: "Simplifi account password"
+    secret: true
+  export_format:
+    type: string
+    required: false
+    default: "json"
+    description: "Export format: json or csv"
+  export_filename:
+    type: string
+    required: false
+    default: "simplifi_export"
+    description: "Filename prefix for exported files"
+
+entryPoint:
+  type: shell
+  path: skill/run.sh
+
+triggers:
+  keywords:
+    - simplifi
+    - quicken
+    - transactions
+    - export simplifi
+    - simplifi accounts

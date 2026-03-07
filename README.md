@@ -1,20 +1,36 @@
 # simplifiapi
-An unofficial API for Quicken Simplifi
+An unofficial API for Quicken Simplifi. Usable as a **standalone Python package** or as an **OpenClaw skill**.
 
-## Install
+## OpenClaw skill
 
-PyPI is temporarily down. Install with pip from GitHub directly
+This repo is an [OpenClaw](https://docs.openclaw.ai/) skill. Use it when you want Simplifi data from an OpenClaw agent.
+
+- **Manifest:** `skill.yaml` (name, permissions, config, shell entry point)
+- **Entry script:** `skill/run.sh` — runs the CLI using env config (`SIMPLIFI_TOKEN` or `SIMPLIFI_EMAIL`/`SIMPLIFI_PASSWORD`, plus optional export options)
+- **Agent instructions:** `SKILL.md` — when and how to use the skill
+
+Install the skill in your OpenClaw workspace (e.g. clone into `~/.openclaw/workspace/skills/quicken-simplifi`), install deps and set config:
+
+```bash
+pip install -r requirements.txt
+openclaw skills validate .
+```
+
+Set config (token or email/password), then trigger with keywords like *simplifi*, *quicken*, *transactions*.
+
+## Run locally (no OpenClaw)
+
+Install deps and run the CLI via Python:
 
 ```shell
-pip3 install git+https://github.com/rijn/simplifiapi
+pip install -r requirements.txt
+python3 -m simplifiapi --token="..." --transactions
 ```
 
 ## CLI
 
-This package provides a command-line tool that could access and save data to local files.
-
 ```shell
-usage: simplifiapi [-h] [--email [EMAIL]] [--password [PASSWORD]] [--token [TOKEN]] [--accounts] [--transactions] [--tags] [--categories] [--filename FILENAME] [--format {json,csv}]
+usage: python3 -m simplifiapi [-h] [--email [EMAIL]] [--password [PASSWORD]] [--token [TOKEN]] [--accounts] [--transactions] [--tags] [--categories] [--filename FILENAME] [--format {json,csv}]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -30,8 +46,8 @@ optional arguments:
   --format {json,csv}   The format used to return data.
 
 examples:
-> simplifiapi --token="..." --transactions
-> simplifiapi --token="..." --transactions --filename=20231125 --format=csv
+> python3 -m simplifiapi --token="..." --transactions
+> python3 -m simplifiapi --token="..." --transactions --filename=20231125 --format=csv
 ```
 
 ## Python API

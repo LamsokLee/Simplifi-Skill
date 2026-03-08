@@ -39,6 +39,38 @@ config:
     required: false
     default: "simplifi_export"
     description: "Filename prefix for exported files"
+  networth:
+    type: boolean
+    required: false
+    default: false
+    description: "If true, also run net-worth analysis on the long-format net-worth file"
+  networth_file:
+    type: string
+    required: false
+    description: "Path to long-format net-worth CSV: date + category columns (default net_worth.csv)"
+  networth_from:
+    type: string
+    required: false
+    description: "Start date for net-worth range (YYYY-MM-DD)"
+  networth_to:
+    type: string
+    required: false
+    description: "End date for net-worth range (YYYY-MM-DD)"
+  networth_monthly:
+    type: boolean
+    required: false
+    default: false
+    description: "Show monthly net-worth summary (one row per month with all category values)"
+  networth_quarterly:
+    type: boolean
+    required: false
+    default: false
+    description: "Show quarterly net-worth summary (one row per quarter with all category values)"
+  networth_yearly:
+    type: boolean
+    required: false
+    default: false
+    description: "Show yearly net-worth summary (one row per year with all category values)"
 
 entryPoint:
   type: shell
@@ -51,3 +83,6 @@ triggers:
     - transactions
     - export simplifi
     - simplifi accounts
+    - net worth
+    - networth
+    - simplifi net worth

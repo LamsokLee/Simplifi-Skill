@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import sys
 
 import configargparse
@@ -11,6 +12,29 @@ logger = logging.getLogger("simplifiapi")
 
 JSON_FORMAT = "json"
 CSV_FORMAT = "csv"
+
+_SUBCOMMANDS = ("fetch", "spending", "income", "networth")
+_NETWORTH_CMDS = ("convert", "analyze", "update")
+
+
+def _print_usage():
+    print("Usage: python3 -m simplifiapi <subcommand> [options]")
+    print()
+    print("Subcommands:")
+    print("  fetch       Fetch data from Simplifi API (accounts, transactions, tags, categories)")
+    print("  spending    Analyze transactions (expense/spending reports)")
+    print("  income      Analyze transactions (income-only reports)")
+    print("  networth    Net worth: use 'networth convert', 'networth analyze', 'networth update'")
+    print()
+    print("Examples:")
+    print("  python3 -m simplifiapi fetch --transactions --format=csv")
+    print("  python3 -m simplifiapi spending --from 2025-01-01")
+    print("  python3 -m simplifiapi income")
+    print("  python3 -m simplifiapi networth convert 'Simplifi - net-worth.csv' -o net_worth.csv")
+    print("  python3 -m simplifiapi networth analyze net_worth.csv --monthly")
+    print("  python3 -m simplifiapi networth update net_worth.csv")
+    print()
+    print("Run a subcommand with --help for its options, e.g. simplifiapi fetch --help")
 
 
 def parse_arguments(args):
@@ -50,8 +74,8 @@ def parse_arguments(args):
 
     # Export
     parser.add_argument('--filename',
-                        default="output",
-                        help="Write results to file this prefix")
+                        default="data/output",
+                        help="Write results to this path prefix (default: data/output -> data/output_*.json|csv)")
     parser.add_argument('--format',
                         choices=[JSON_FORMAT, CSV_FORMAT],
                         default=JSON_FORMAT,
@@ -63,6 +87,9 @@ def parse_arguments(args):
 def write_data(options, data, name):
     filename = "{}_{}.{}".format(options.filename, name, options.format)
     logger.warn("Saving {} to {}".format(name, filename))
+    dirname = os.path.dirname(filename)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
     if options.format == CSV_FORMAT:
         json_normalize(data).to_csv(filename, index=False)
     elif options.format == JSON_FORMAT:
@@ -70,9 +97,8 @@ def write_data(options, data, name):
             json.dump(data, f, indent=2)
 
 
-def main():
-    options = parse_arguments(sys.argv[1:])
-
+def _run_fetch(argv):
+    options = parse_arguments(argv)
     client = Client()
 
     token = options.token
@@ -110,3 +136,56 @@ def main():
     if (options.categories):
         categories = client.get_categories(datasetId)
         write_data(options, categories, "categories")
+
+
+def main():
+    argv = sys.argv[1:]
+    # No args or first arg is a flag (e.g. --help, --token): legacy fetch
+    if not argv or argv[0].startswith("-"):
+        if argv and argv[0] in ("-h", "--help"):
+            _print_usage()
+            return
+        _run_fetch(argv)
+        return
+    sub = argv[0].lower()
+    if sub in ("-h", "--help"):
+        _print_usage()
+        return
+    if sub == "fetch":
+        _run_fetch(argv[1:])
+        return
+    if sub == "spending":
+        sys.argv = [sys.argv[0]] + argv[1:]
+        from simplifiapi.spending.analyze import main as spending_main
+        spending_main()
+        return
+    if sub == "income":
+        sys.argv = [sys.argv[0]] + argv[1:]
+        from simplifiapi.income.analyze import main as income_main
+        income_main()
+        return
+    if sub == "networth":
+        if len(argv) < 2:
+            print("Usage: python3 -m simplifiapi networth {convert|analyze|update} [options]", file=sys.stderr)
+            print("  convert   Wide CSV -> long CSV    analyze   Report on long CSV    update   API -> append/overwrite today", file=sys.stderr)
+            sys.exit(1)
+        nw_cmd = argv[1].lower()
+        if nw_cmd not in _NETWORTH_CMDS:
+            print(f"Unknown networth command: {nw_cmd}. Use convert, analyze, or update.", file=sys.stderr)
+            sys.exit(1)
+        sys.argv = [sys.argv[0]] + argv[2:]
+        if nw_cmd == "convert":
+            from simplifiapi.networth.convert import main as convert_main
+            convert_main()
+        elif nw_cmd == "analyze":
+            from simplifiapi.networth.analyze import main as analyze_main
+            analyze_main()
+        else:
+            from simplifiapi.networth.update import main as update_main
+            sys.exit(update_main())
+        return
+    if sub in ("help", "h"):
+        _print_usage()
+        return
+    # Unknown subcommand: treat as fetch for backward compat (e.g. someone passed a file)
+    _run_fetch(argv)

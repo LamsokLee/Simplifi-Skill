@@ -20,34 +20,37 @@ Set config (token or email/password), then trigger with keywords like *simplifi*
 
 ## Run locally (no OpenClaw)
 
-Install deps and run the CLI via Python:
+Install deps and run everything through one CLI:
 
 ```shell
 pip install -r requirements.txt
-python3 -m simplifiapi --token="..." --transactions
+./run fetch --token="..." --transactions
+./run spending
+./run income
+./run networth convert "Simplifi - net-worth.csv" -o data/net_worth.csv
+./run networth analyze
+./run networth update
 ```
+(Defaults use the **data/** folder for exports and net-worth CSV.)
+
+Or: `python3 -m simplifiapi <subcommand> [options]`. Run `./run --help` or `python3 -m simplifiapi --help` for subcommands.
+
+## Repo layout
+
+- **simplifiapi/** — Single Python package (client, cli, login, spending, income, networth)
+- **data/** — Default location for exports and net-worth CSV (`data/output_*.json|csv`, `data/net_worth.csv`); created automatically
+- **skill/** — OpenClaw skill entry script
+- **run** — Convenience script: `./run <subcommand> [options]`
+- **README.md**, **SKILL.md**, **skill.yaml**, **requirements.txt**
 
 ## CLI
 
 ```shell
-usage: python3 -m simplifiapi [-h] [--email [EMAIL]] [--password [PASSWORD]] [--token [TOKEN]] [--accounts] [--transactions] [--tags] [--categories] [--filename FILENAME] [--format {json,csv}]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --email [EMAIL]       The e-mail address for your Quicken Simplifi account
-  --password [PASSWORD]
-                        The password for your Quicken Simplifi account
-  --token [TOKEN]       Use existing token to bypass MFA check
-  --accounts            Retrieve accounts
-  --transactions        Retrieve transactions
-  --tags                Retrieve tags
-  --categories          Retrieve categories
-  --filename FILENAME   Write results to file this prefix
-  --format {json,csv}   The format used to return data.
-
-examples:
-> python3 -m simplifiapi --token="..." --transactions
-> python3 -m simplifiapi --token="..." --transactions --filename=20231125 --format=csv
+# Subcommands: fetch (default), spending, income, networth convert|analyze|update
+python3 -m simplifiapi --help
+python3 -m simplifiapi fetch --help
+python3 -m simplifiapi fetch --token="..." --transactions --format=csv
+python3 -m simplifiapi networth analyze net_worth.csv --monthly
 ```
 
 ## Python API

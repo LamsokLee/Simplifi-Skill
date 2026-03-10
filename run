@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Single entry point for all Simplifi scripts. Run from repo root.
+# Usage: ./run fetch [options]  |  ./run spending [options]  |  ./run income [options]
+#        ./run networth convert [options]  |  ./run networth analyze [options]  |  ./run networth update [options]
+set -e
+REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$REPO_ROOT"
+export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 -m simplifiapi "$@"

@@ -30,14 +30,20 @@ HAVE_DATA=0
 [[ -n "${SIMPLIFI_CATEGORIES:-}" ]]   && { ARGS+=(--categories);   HAVE_DATA=1; }
 [[ "$HAVE_DATA" -eq 0 ]] && ARGS+=(--transactions)
 
-ARGS+=(--filename="${SIMPLIFI_EXPORT_FILENAME:-simplifi_export}")
+ARGS+=(--filename="${SIMPLIFI_EXPORT_FILENAME:-data/output}")
 ARGS+=(--format="${SIMPLIFI_EXPORT_FORMAT:-json}")
 
 # Run Simplifi API (fetch accounts, transactions, etc.)
 python3 -m simplifiapi "${ARGS[@]}"
 
+# Optional: update net-worth file with latest balances from API (append or overwrite today's row)
+NETWORTH_FILE="${SIMPLIFI_NETWORTH_FILE:-data/net_worth.csv}"
+if [[ -n "${SIMPLIFI_NETWORTH_UPDATE:-}" ]]; then
+  echo "--- Net Worth Update ---" >&2
+  python3 -m simplifiapi networth update "$REPO_ROOT/$NETWORTH_FILE"
+fi
+
 # Optional: run net-worth analysis if requested and file exists
-NETWORTH_FILE="${SIMPLIFI_NETWORTH_FILE:-net_worth.csv}"
 if [[ -n "${SIMPLIFI_NETWORTH:-}" ]]; then
   if [[ -f "$REPO_ROOT/$NETWORTH_FILE" ]]; then
     echo "--- Net Worth Analysis ---" >&2
@@ -47,7 +53,7 @@ if [[ -n "${SIMPLIFI_NETWORTH:-}" ]]; then
     [[ -n "${SIMPLIFI_NETWORTH_MONTHLY:-}" ]] && NW_ARGS+=(--monthly)
     [[ -n "${SIMPLIFI_NETWORTH_QUARTERLY:-}" ]] && NW_ARGS+=(--quarterly)
     [[ -n "${SIMPLIFI_NETWORTH_YEARLY:-}" ]] && NW_ARGS+=(--yearly)
-    python3 "$REPO_ROOT/analyze_networth.py" "${NW_ARGS[@]}"
+    python3 -m simplifiapi networth analyze "${NW_ARGS[@]}"
   else
     echo "Net worth file not found: $NETWORTH_FILE (set SIMPLIFI_NETWORTH_FILE to override)." >&2
   fi

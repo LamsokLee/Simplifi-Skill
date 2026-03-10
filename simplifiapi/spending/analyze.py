@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Analyze transactions from output_transactions.csv (Simplifi/Quicken export format).
-Reports by category, type, payee, and time period.
+Reports by category, type, payee, and time period (spending/expense focused).
 """
 
 import argparse
@@ -45,19 +45,13 @@ def parse_date(s: str):
 
 
 def load_category_names(categories_path: str | Path) -> dict[str, str]:
-    """
-    Load output_categories.json and return map of category id -> name.
-    Returns empty dict if file missing or invalid.
-    """
+    """Load output_categories.json and return map of category id -> name."""
     info = load_category_info(categories_path)
     return {cid: data["name"] for cid, data in info.items()}
 
 
 def load_category_info(categories_path: str | Path) -> dict[str, dict]:
-    """
-    Load output_categories.json and return map of category id -> { "name", "type" }.
-    type is "EXPENSE" or "INCOME". Returns empty dict if file missing or invalid.
-    """
+    """Load output_categories.json; return map of category id -> { name, type } (EXPENSE/INCOME)."""
     path = Path(categories_path)
     if not path.exists():
         return {}
@@ -83,7 +77,7 @@ def load_category_info(categories_path: str | Path) -> dict[str, dict]:
 
 
 def get_category_label(row: dict, category_names: dict[str, str] | None = None) -> str:
-    """Single label for category: use name from category_names when available, else coa.id or cpCategoryId."""
+    """Single label for category."""
     coa_type = (row.get("coa.type") or "").strip() or "UNKNOWN"
     coa_id = (row.get("coa.id") or "").strip()
     cp_cat = (row.get("cpData.cpCategoryId") or "").strip()
@@ -103,10 +97,7 @@ def analyze_by_category(
     category_names: dict[str, str] | None = None,
     category_info: dict[str, dict] | None = None,
 ) -> dict[str, dict]:
-    """
-    Aggregate by category: sum of income (amount>0), expenses (amount<0), count.
-    When category_info is provided, result is keyed by category id; otherwise by label (name).
-    """
+    """Aggregate by category: income, expense, count."""
     by_cat = defaultdict(lambda: {"income": 0.0, "expense": 0.0, "count": 0})
     for r in rows:
         amt = parse_amount(r.get("amount") or "")
@@ -127,7 +118,7 @@ def analyze_by_category(
 
 
 def analyze_by_type(rows: list[dict], min_amount: float = 0) -> dict[str, dict]:
-    """Aggregate by transaction type (CASH_FLOW, INVESTMENT)."""
+    """Aggregate by transaction type."""
     by_type = defaultdict(lambda: {"income": 0.0, "expense": 0.0, "count": 0})
     for r in rows:
         amt = parse_amount(r.get("amount") or "")
@@ -143,7 +134,7 @@ def analyze_by_type(rows: list[dict], min_amount: float = 0) -> dict[str, dict]:
 
 
 def analyze_by_coa_type(rows: list[dict], min_amount: float = 0) -> dict[str, dict]:
-    """Aggregate by coa.type (CATEGORY, BALANCE_ADJUSTMENT, ACCOUNT, UNCATEGORIZED)."""
+    """Aggregate by coa.type."""
     by_coa = defaultdict(lambda: {"income": 0.0, "expense": 0.0, "count": 0})
     for r in rows:
         amt = parse_amount(r.get("amount") or "")
@@ -180,7 +171,7 @@ def analyze_by_month(rows: list[dict], min_amount: float = 0) -> dict[str, dict]
 def analyze_top_payees(
     rows: list[dict], n: int = 20, expense_only: bool = True, min_amount: float = 0
 ) -> list[tuple[str, float, int]]:
-    """Top N payees by absolute amount (expense or both)."""
+    """Top N payees by absolute amount."""
     by_payee = defaultdict(lambda: {"total": 0.0, "count": 0})
     for r in rows:
         amt = parse_amount(r.get("amount") or "")
@@ -198,7 +189,7 @@ def analyze_top_payees(
 
 
 def analyze_by_state(rows: list[dict]) -> dict[str, int]:
-    """Count by state (PENDING, CLEARED)."""
+    """Count by state."""
     by_state = defaultdict(int)
     for r in rows:
         s = (r.get("state") or "").strip() or "UNKNOWN"
@@ -207,10 +198,7 @@ def analyze_by_state(rows: list[dict]) -> dict[str, int]:
 
 
 def load_investment_account_ids(accounts_path: str | Path) -> set[str]:
-    """
-    Load output_accounts.json (or similar) and return set of account IDs
-    whose type is INVESTMENT. Returns empty set if file missing or invalid.
-    """
+    """Load output_accounts.json and return set of INVESTMENT account IDs."""
     path = Path(accounts_path)
     if not path.exists():
         return set()
@@ -236,7 +224,7 @@ def filter_rows(
     category_names: dict[str, str] | None = None,
     require_known_category: bool = False,
 ) -> list[dict]:
-    """Filter rows by optional date range, state, type, coa.type; optionally exclude transfers, accounts, or rows with unknown category."""
+    """Filter rows by date, state, type, etc."""
     exclude_account_ids = exclude_account_ids or set()
     out = []
     for r in rows:
@@ -276,7 +264,6 @@ def print_section(title: str) -> None:
 
 
 def print_category_summary(by_cat: dict, limit: int = 25) -> None:
-    """Print category summary sorted by expense then income."""
     total_income = sum(d["income"] for d in by_cat.values())
     total_expense = sum(d["expense"] for d in by_cat.values())
     print(f"  Total income:  {total_income:,.2f}")
@@ -299,7 +286,7 @@ def print_category_expense_income_sections(
     category_info: dict[str, dict],
     limit: int = 25,
 ) -> None:
-    """Print two sections: By category (Expense) and By category (Income), using category type from file."""
+    """Print By category (Expense) and By category (Income) sections."""
     expense_items = []
     income_items = []
     for cid, d in by_cat.items():
@@ -311,7 +298,6 @@ def print_category_expense_income_sections(
         else:
             income_items.append((info["name"], d))
 
-    # Section: Expense categories only
     print_section("By category (Expense)")
     total_exp = sum(d["expense"] for _, d in expense_items)
     print(f"  Total expense: {total_exp:,.2f}")
@@ -321,7 +307,6 @@ def print_category_expense_income_sections(
     for name, d in sorted(expense_items, key=lambda x: -x[1]["expense"])[:limit]:
         print(f"  {name:<45} {d['expense']:>12,.2f} {d['count']:>6}")
 
-    # Section: Income categories only
     print_section("By category (Income)")
     total_inc = sum(d["income"] for _, d in income_items)
     print(f"  Total income:  {total_inc:,.2f}")
@@ -339,66 +324,19 @@ def main() -> None:
     parser.add_argument(
         "csv_file",
         nargs="?",
-        default="output_transactions.csv",
-        help="Path to transactions CSV (default: output_transactions.csv)",
+        default="data/output_transactions.csv",
+        help="Path to transactions CSV (default: data/output_transactions.csv)",
     )
-    parser.add_argument(
-        "--from",
-        dest="from_date",
-        metavar="YYYY-MM-DD",
-        help="Start of date range (include transactions on or after this date)",
-    )
-    parser.add_argument(
-        "--to",
-        dest="to_date",
-        metavar="YYYY-MM-DD",
-        help="End of date range (include transactions on or before this date)",
-    )
-    parser.add_argument(
-        "--state",
-        choices=["PENDING", "CLEARED"],
-        help="Filter by state",
-    )
-    parser.add_argument(
-        "--include-transfers",
-        action="store_true",
-        help="Include BALANCE_ADJUSTMENT and ACCOUNT (transfers); default is to exclude them",
-    )
-    parser.add_argument(
-        "--min-amount",
-        type=float,
-        default=0,
-        help="Ignore transactions with absolute amount below this (default: 0)",
-    )
-    parser.add_argument(
-        "--top",
-        type=int,
-        default=20,
-        help="Number of top payees to show (default: 20)",
-    )
-    parser.add_argument(
-        "--categories",
-        type=int,
-        default=25,
-        help="Max categories to show in category report (default: 25)",
-    )
-    parser.add_argument(
-        "--output-csv",
-        metavar="FILE",
-        help="Write category summary to CSV",
-    )
-    parser.add_argument(
-        "--accounts-file",
-        metavar="FILE",
-        default="output_accounts.json",
-        help="Accounts JSON from Simplifi (used to exclude INVESTMENT accounts); default: output_accounts.json",
-    )
-    parser.add_argument(
-        "--categories-file",
-        metavar="FILE",
-        default="output_categories.json",
-        help="Categories JSON from Simplifi (used to show category names); default: output_categories.json",
-    )
+    parser.add_argument("--from", dest="from_date", metavar="YYYY-MM-DD", help="Start of date range")
+    parser.add_argument("--to", dest="to_date", metavar="YYYY-MM-DD", help="End of date range")
+    parser.add_argument("--state", choices=["PENDING", "CLEARED"], help="Filter by state")
+    parser.add_argument("--include-transfers", action="store_true", help="Include transfers")
+    parser.add_argument("--min-amount", type=float, default=0, help="Min absolute amount")
+    parser.add_argument("--top", type=int, default=20, help="Top N payees")
+    parser.add_argument("--categories", type=int, default=25, help="Max categories to show")
+    parser.add_argument("--output-csv", metavar="FILE", help="Write category summary to CSV")
+    parser.add_argument("--accounts-file", metavar="FILE", default="data/output_accounts.json", help="Accounts JSON")
+    parser.add_argument("--categories-file", metavar="FILE", default="data/output_categories.json", help="Categories JSON")
     args = parser.parse_args()
 
     path = Path(args.csv_file)
@@ -411,23 +349,20 @@ def main() -> None:
         print("No rows in CSV.", file=sys.stderr)
         sys.exit(0)
 
-    # Require accounts file (exclude INVESTMENT accounts)
     accounts_path = Path(args.accounts_file)
     if not accounts_path.exists():
         print(f"Error: accounts file not found: {accounts_path}", file=sys.stderr)
         sys.exit(1)
     exclude_account_ids = load_investment_account_ids(args.accounts_file)
     if exclude_account_ids:
-        print(f"Excluding {len(exclude_account_ids)} investment account(s) from {args.accounts_file}", file=sys.stderr)
+        print(f"Excluding {len(exclude_account_ids)} investment account(s)", file=sys.stderr)
 
-    # Require categories file (names and expense/income sections)
     categories_path = Path(args.categories_file)
     if not categories_path.exists():
         print(f"Error: categories file not found: {categories_path}", file=sys.stderr)
         sys.exit(1)
     category_info = load_category_info(args.categories_file)
     category_names = {cid: d["name"] for cid, d in category_info.items()} if category_info else {}
-    # Exclude transactions whose category is not in the categories file
     require_known_category = bool(category_info)
 
     rows = filter_rows(
@@ -483,9 +418,7 @@ def main() -> None:
         print(f"  {month:<10} {d['expense']:>14,.2f} {d['income']:>14,.2f} {d['count']:>8}")
 
     print_section(f"Top {args.top} payees (expenses)")
-    top = analyze_top_payees(
-        rows, n=args.top, expense_only=True, min_amount=args.min_amount
-    )
+    top = analyze_top_payees(rows, n=args.top, expense_only=True, min_amount=args.min_amount)
     print(f"  {'Payee':<40} {'Total':>12} {'Count':>6}")
     print("  " + "-" * 60)
     for payee, total, count in top:

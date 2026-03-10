@@ -39,6 +39,11 @@ config:
     required: false
     default: "simplifi_export"
     description: "Filename prefix for exported files"
+  networth_update:
+    type: boolean
+    required: false
+    default: false
+    description: "If true, fetch latest balances from API and update net-worth file (append or overwrite today's row)"
   networth:
     type: boolean
     required: false
@@ -47,7 +52,7 @@ config:
   networth_file:
     type: string
     required: false
-    description: "Path to long-format net-worth CSV: date + category columns (default net_worth.csv)"
+    description: "Path to long-format net-worth CSV (default data/net_worth.csv)"
   networth_from:
     type: string
     required: false

@@ -2,7 +2,7 @@
 """
 Convert wide Simplifi net-worth CSV (Account/Time, Subaccount, Concept, date columns)
 to long format: one row per day with columns date + category aggregates.
-Run once to create net_worth.csv; then use analyze_networth.py on the long file.
+Run once to create net_worth.csv; then use simplifiapi networth analyze on the long file.
 """
 
 import argparse
@@ -43,10 +43,7 @@ def parse_value(s: str) -> float | None:
 
 
 def load_networth_csv(path: str | Path) -> tuple[list[datetime], list[dict]]:
-    """
-    Load wide net-worth CSV. Returns (list of dates, list of row dicts).
-    Each row dict: account, subaccount, concept, values (list per date).
-    """
+    """Load wide net-worth CSV. Returns (dates, row dicts)."""
     path = Path(path)
     with open(path, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
@@ -77,23 +74,13 @@ def load_networth_csv(path: str | Path) -> tuple[list[datetime], list[dict]]:
 
 
 AGGREGATE_CATEGORIES = [
-    "cash_and_checking",
-    "savings",
-    "other_banking",
-    "brokerage",
-    "retirement",
-    "other_investments",
-    "vehicle",
-    "total_assets",
-    "credit_cards",
-    "other_liabilities",
-    "total_liabilities",
-    "net_worth",
+    "cash_and_checking", "savings", "other_banking", "brokerage",
+    "retirement", "other_investments", "vehicle", "total_assets",
+    "credit_cards", "other_liabilities", "total_liabilities", "net_worth",
 ]
 
 
 def _category_key(account: str, subaccount: str, concept: str) -> str | None:
-    """Map (account, subaccount, concept) to aggregate category key or None."""
     a, b, c = account.strip(), subaccount.strip(), concept.strip()
     if a == "Total Assets":
         return "total_assets"
@@ -125,14 +112,12 @@ def _category_key(account: str, subaccount: str, concept: str) -> str | None:
 
 
 def aggregate_by_category(dates: list[datetime], rows: list[dict]) -> dict[str, list[float | None]]:
-    """Build per-category series: category_key -> list of values (one per date)."""
     current_account = ""
     current_subaccount = ""
     n = len(dates)
     by_cat: dict[str, list[float | None]] = {}
     for k in AGGREGATE_CATEGORIES:
         by_cat[k] = [0.0] * n if k not in ("total_assets", "total_liabilities", "net_worth") else [None] * n
-
     for row in rows:
         a, b, c = row["account"], row["subaccount"], row["concept"]
         if a:
@@ -159,15 +144,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Convert wide Simplifi net-worth CSV to long format (one row per day, columns per category).",
     )
-    parser.add_argument(
-        "csv_file",
-        help="Path to wide-format net-worth CSV (e.g. Simplifi - net-worth.csv)",
-    )
-    parser.add_argument(
-        "-o", "--output",
-        default="net_worth.csv",
-        help="Output path (default: net_worth.csv)",
-    )
+    parser.add_argument("csv_file", help="Path to wide-format net-worth CSV (e.g. Simplifi - net-worth.csv)")
+    parser.add_argument("-o", "--output", default="data/net_worth.csv", help="Output path (default: data/net_worth.csv)")
     args = parser.parse_args()
 
     path = Path(args.csv_file)
@@ -182,6 +160,7 @@ def main() -> None:
 
     by_cat = aggregate_by_category(dates, rows)
     out_path = Path(args.output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["date"] + AGGREGATE_CATEGORIES)
@@ -192,7 +171,7 @@ def main() -> None:
                 out_row.append(f"{v:.2f}" if v is not None else "")
             w.writerow(out_row)
 
-    print(f"Wrote {len(dates)} rows to {out_path} (columns: date, {', '.join(AGGREGATE_CATEGORIES)})", file=sys.stderr)
+    print(f"Wrote {len(dates)} rows to {out_path}", file=sys.stderr)
     print("To add a new day, append one row with date and values for each category.", file=sys.stderr)
 
 

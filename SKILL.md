@@ -22,19 +22,19 @@ Use this skill when the user asks to:
 ./run fetch --transactions --format=csv
 ./run spending
 ./run income
-./run networth convert "Simplifi - net-worth.csv" -o data/net_worth.csv
+./run networth convert "Simplifi - net-worth.csv" -o data/networth_history.csv
 ./run networth analyze
 ./run networth update
 ```
-(Defaults use the **data/** folder: fetch → `data/output_*.json|csv`, spending/income → `data/output_transactions.csv` + `data/output_accounts.json` + `data/output_categories.json`, networth → `data/net_worth.csv`.)
+(Defaults use the **data/** folder: fetch → `data/output_*.json|csv`, spending/income → `data/output_transactions.csv` + `data/output_accounts.json` + `data/output_categories.json`, networth → `data/networth_history.csv`.)
 
 Or with Python directly:
 ```bash
 python3 -m simplifi fetch --token="YOUR_TOKEN" --transactions --format=csv
 python3 -m simplifi spending --from 2025-01-01
 python3 -m simplifi income
-python3 -m simplifi networth convert "Simplifi - net-worth.csv" -o data/net_worth.csv
-python3 -m simplifi networth analyze data/net_worth.csv --monthly
+python3 -m simplifi networth convert "Simplifi - net-worth.csv" -o data/networth_history.csv
+python3 -m simplifi networth analyze data/networth_history.csv --monthly
 python3 -m simplifi networth update
 ```
 
@@ -47,16 +47,16 @@ python3 -m simplifi networth update
 - `SIMPLIFI_EMAIL` + `SIMPLIFI_PASSWORD` – login (2FA from iMessage on macOS if available)
 - `SIMPLIFI_TRANSACTIONS=1`, `SIMPLIFI_ACCOUNTS=1`, `SIMPLIFI_TAGS=1`, `SIMPLIFI_CATEGORIES=1` – which data to fetch (default is transactions)
 - `SIMPLIFI_EXPORT_FILENAME` – output file prefix (default `data/output` → `data/output_*.json|csv`)
-- `SIMPLIFI_EXPORT_FORMAT` – `json` or `csv` (default `json`)
+- `SIMPLIFI_EXPORT_FORMAT` – `json` or `csv` (default `csv`)
 - `SIMPLIFI_NETWORTH=1` – also run net-worth analysis on the long-format file
-- `SIMPLIFI_NETWORTH_FILE` – path to long-format net-worth CSV (default `data/net_worth.csv`)
+- `SIMPLIFI_NETWORTH_FILE` – path to long-format net-worth CSV (default `data/networth_history.csv`)
 - `SIMPLIFI_NETWORTH_FROM`, `SIMPLIFI_NETWORTH_TO` – date range for net-worth (YYYY-MM-DD)
 - `SIMPLIFI_NETWORTH_MONTHLY=1`, `SIMPLIFI_NETWORTH_QUARTERLY=1`, `SIMPLIFI_NETWORTH_YEARLY=1` – show monthly, quarterly, or yearly net-worth summary (with category breakdown per period; skips daily point-by-point table)
 - `SIMPLIFI_NETWORTH_UPDATE=1` – update the net-worth file with latest balances from the API (append a new row for today, or overwrite existing row for today)
 
 ## Output and data folder
 
-All exports and inputs use the **data/** folder by default. Exports are written as `{filename}_{accounts|transactions|tags|categories}.{json|csv}` (default prefix `data/output`). Spending and income read `data/output_transactions.csv`, `data/output_accounts.json`, `data/output_categories.json`. Net-worth uses `data/net_worth.csv`. The directory is created automatically when writing.
+All exports and inputs use the **data/** folder by default. Exports are written as `{filename}_{accounts|transactions|tags|categories}.{json|csv}` (default prefix `data/output`). Spending and income read `data/output_transactions.csv`, `data/output_accounts.json`, `data/output_categories.json`. Net-worth uses `data/networth_history.csv`. The directory is created automatically when writing.
 
 ## Net-worth analysis
 
@@ -64,12 +64,12 @@ The skill expects a **long-format** net-worth file: one row per day, with header
 
 **Repo structure:** **simplifi/api/** = Simplifi HTTP client; **simplifi/login/** = auth and token cache; **simplifi/spending/**, **income/**, **networth/** = analysis scripts; **data/** = default exports and net-worth CSV. Invoke via `./run <subcommand>` or `python3 -m simplifi <subcommand>`.
 
-**One-time setup:** Convert a wide Simplifi net-worth export to long format (writes to `data/net_worth.csv` by default):
+**One-time setup:** Convert a wide Simplifi net-worth export to long format (writes to `data/networth_history.csv` by default):
 ```bash
-./run networth convert "Simplifi - net-worth.csv" -o data/net_worth.csv
+./run networth convert "Simplifi - net-worth.csv" -o data/networth_history.csv
 ```
 
-**Update net-worth from API:** `./run networth update` (default: `data/net_worth.csv`) or set `SIMPLIFI_NETWORTH_UPDATE=1` in the skill.
+**Update net-worth from API:** `./run networth update` (default: `data/networth_history.csv`) or set `SIMPLIFI_NETWORTH_UPDATE=1` in the skill.
 
 **As skill:** Set `SIMPLIFI_NETWORTH=1` to run the net-worth analyzer; set `SIMPLIFI_NETWORTH_UPDATE=1` to refresh the file first. Optionally set `SIMPLIFI_NETWORTH_FROM`, `SIMPLIFI_NETWORTH_TO`, `SIMPLIFI_NETWORTH_MONTHLY`, `SIMPLIFI_NETWORTH_QUARTERLY`, `SIMPLIFI_NETWORTH_YEARLY`.
 

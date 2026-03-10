@@ -33,9 +33,9 @@ def _print_usage():
     print("  python3 -m simplifi fetch --transactions --format=csv")
     print("  python3 -m simplifi spending --from 2025-01-01")
     print("  python3 -m simplifi income")
-    print("  python3 -m simplifi networth convert 'Simplifi - net-worth.csv' -o net_worth.csv")
-    print("  python3 -m simplifi networth analyze net_worth.csv --monthly")
-    print("  python3 -m simplifi networth update net_worth.csv")
+    print("  python3 -m simplifi networth convert 'Simplifi - net-worth.csv' -o data/networth_history.csv")
+    print("  python3 -m simplifi networth analyze --monthly")
+    print("  python3 -m simplifi networth update")
     print()
     print("Run a subcommand with --help for its options, e.g. simplifi fetch --help")
 
@@ -81,8 +81,8 @@ def parse_arguments(args):
                         help="Write results to this path prefix (default: data/output -> data/output_*.json|csv)")
     parser.add_argument('--format',
                         choices=[JSON_FORMAT, CSV_FORMAT],
-                        default=JSON_FORMAT,
-                        help="The format used to return data.")
+                        default=CSV_FORMAT,
+                        help="The format used to return data (default: csv).")
 
     return parser.parse_args(args)
 

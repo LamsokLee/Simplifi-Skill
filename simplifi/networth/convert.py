@@ -2,7 +2,7 @@
 """
 Convert wide Simplifi net-worth CSV (Account/Time, Subaccount, Concept, date columns)
 to long format: one row per day with columns date + category aggregates.
-Run once to create net_worth.csv; then use simplifi networth analyze on the long file.
+Run once to create data/networth_history.csv; then use simplifi networth analyze on the long file.
 """
 
 import argparse
@@ -145,7 +145,7 @@ def main() -> None:
         description="Convert wide Simplifi net-worth CSV to long format (one row per day, columns per category).",
     )
     parser.add_argument("csv_file", help="Path to wide-format net-worth CSV (e.g. Simplifi - net-worth.csv)")
-    parser.add_argument("-o", "--output", default="data/net_worth.csv", help="Output path (default: data/net_worth.csv)")
+    parser.add_argument("-o", "--output", default="data/networth_history.csv", help="Output path (default: data/networth_history.csv)")
     args = parser.parse_args()
 
     path = Path(args.csv_file)

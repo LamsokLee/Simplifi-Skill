@@ -31,13 +31,13 @@ HAVE_DATA=0
 [[ "$HAVE_DATA" -eq 0 ]] && ARGS+=(--transactions)
 
 ARGS+=(--filename="${SIMPLIFI_EXPORT_FILENAME:-data/output}")
-ARGS+=(--format="${SIMPLIFI_EXPORT_FORMAT:-json}")
+ARGS+=(--format="${SIMPLIFI_EXPORT_FORMAT:-csv}")
 
 # Run Simplifi API (fetch accounts, transactions, etc.)
 python3 -m simplifi "${ARGS[@]}"
 
 # Optional: update net-worth file with latest balances from API (append or overwrite today's row)
-NETWORTH_FILE="${SIMPLIFI_NETWORTH_FILE:-data/net_worth.csv}"
+NETWORTH_FILE="${SIMPLIFI_NETWORTH_FILE:-data/networth_history.csv}"
 if [[ -n "${SIMPLIFI_NETWORTH_UPDATE:-}" ]]; then
   echo "--- Net Worth Update ---" >&2
   python3 -m simplifi networth update "$REPO_ROOT/$NETWORTH_FILE"

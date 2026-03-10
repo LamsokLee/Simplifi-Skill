@@ -127,7 +127,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Update net-worth CSV with latest balances from Simplifi API.",
     )
-    parser.add_argument("networth_file", nargs="?", default="data/net_worth.csv", help="Path to net-worth CSV (default: data/net_worth.csv)")
+    parser.add_argument("networth_file", nargs="?", default="data/networth_history.csv", help="Path to net-worth CSV (default: data/networth_history.csv)")
     parser.add_argument("--token", default=None, help="Simplifi OAuth token")
     parser.add_argument("--email", default=None, help="Simplifi email")
     parser.add_argument("--password", default=None, help="Simplifi password")

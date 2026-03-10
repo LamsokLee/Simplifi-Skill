@@ -52,7 +52,7 @@ config:
   networth_file:
     type: string
     required: false
-    description: "Path to long-format net-worth CSV (default data/net_worth.csv)"
+    description: "Path to long-format net-worth CSV (default data/networth_history.csv)"
   networth_from:
     type: string
     required: false

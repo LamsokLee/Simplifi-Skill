@@ -6,35 +6,38 @@ import sys
 import configargparse
 from pandas import json_normalize
 
-from simplifiapi.client import Client, load_cached_token
+from simplifi.api import Client
+from simplifi.login.auth import load_cached_token
 
-logger = logging.getLogger("simplifiapi")
+logger = logging.getLogger("simplifi")
 
 JSON_FORMAT = "json"
 CSV_FORMAT = "csv"
 
-_SUBCOMMANDS = ("fetch", "spending", "income", "networth")
+_SUBCOMMANDS = ("login", "fetch", "spending", "income", "networth")
 _NETWORTH_CMDS = ("convert", "analyze", "update")
 
 
 def _print_usage():
-    print("Usage: python3 -m simplifiapi <subcommand> [options]")
+    print("Usage: python3 -m simplifi <subcommand> [options]")
     print()
     print("Subcommands:")
+    print("  login       Log in to Simplifi (save token for fetch and other API use)")
     print("  fetch       Fetch data from Simplifi API (accounts, transactions, tags, categories)")
     print("  spending    Analyze transactions (expense/spending reports)")
     print("  income      Analyze transactions (income-only reports)")
     print("  networth    Net worth: use 'networth convert', 'networth analyze', 'networth update'")
     print()
     print("Examples:")
-    print("  python3 -m simplifiapi fetch --transactions --format=csv")
-    print("  python3 -m simplifiapi spending --from 2025-01-01")
-    print("  python3 -m simplifiapi income")
-    print("  python3 -m simplifiapi networth convert 'Simplifi - net-worth.csv' -o net_worth.csv")
-    print("  python3 -m simplifiapi networth analyze net_worth.csv --monthly")
-    print("  python3 -m simplifiapi networth update net_worth.csv")
+    print("  python3 -m simplifi login --email you@example.com")
+    print("  python3 -m simplifi fetch --transactions --format=csv")
+    print("  python3 -m simplifi spending --from 2025-01-01")
+    print("  python3 -m simplifi income")
+    print("  python3 -m simplifi networth convert 'Simplifi - net-worth.csv' -o net_worth.csv")
+    print("  python3 -m simplifi networth analyze net_worth.csv --monthly")
+    print("  python3 -m simplifi networth update net_worth.csv")
     print()
-    print("Run a subcommand with --help for its options, e.g. simplifiapi fetch --help")
+    print("Run a subcommand with --help for its options, e.g. simplifi fetch --help")
 
 
 def parse_arguments(args):
@@ -97,6 +100,43 @@ def write_data(options, data, name):
             json.dump(data, f, indent=2)
 
 
+def _run_login(argv):
+    from simplifi.login.auth import save_cached_token
+    parser = configargparse.ArgumentParser(description="Log in to Simplifi and cache token")
+    parser.add_argument("--email", nargs="?", default=None, help="Simplifi account email")
+    parser.add_argument("--password", nargs="?", default=None, help="Simplifi account password")
+    parser.add_argument("--token", nargs="?", default=None, help="Use existing token (verify and keep cached)")
+    parser.add_argument("--force", action="store_true", help="Re-login even if a valid token is cached")
+    opts = parser.parse_args(argv)
+    client = Client()
+    if opts.token:
+        if client.verify_token(opts.token):
+            save_cached_token(opts.token)
+            print("Token verified and cached.", file=sys.stderr)
+            return
+        logger.error("Token invalid.")
+        sys.exit(1)
+    token = None if opts.force else load_cached_token()
+    if token and client.verify_token(token):
+        print("Already logged in (token valid). Use --force to re-login.", file=sys.stderr)
+        return
+    email = opts.email
+    password = opts.password
+    if not email:
+        email = input("Email: ").strip()
+    if not password:
+        import getpass
+        password = getpass.getpass("Password: ")
+    if not email or not password:
+        logger.error("Email and password required.")
+        sys.exit(1)
+    token = client.get_token(email=email, password=password)
+    if not token or not client.verify_token(token):
+        logger.error("Unable to log in to Simplifi.")
+        sys.exit(1)
+    print("Logged in successfully; token cached.", file=sys.stderr)
+
+
 def _run_fetch(argv):
     options = parse_arguments(argv)
     client = Client()
@@ -151,22 +191,25 @@ def main():
     if sub in ("-h", "--help"):
         _print_usage()
         return
+    if sub == "login":
+        _run_login(argv[1:])
+        return
     if sub == "fetch":
         _run_fetch(argv[1:])
         return
     if sub == "spending":
         sys.argv = [sys.argv[0]] + argv[1:]
-        from simplifiapi.spending.analyze import main as spending_main
+        from simplifi.spending.analyze import main as spending_main
         spending_main()
         return
     if sub == "income":
         sys.argv = [sys.argv[0]] + argv[1:]
-        from simplifiapi.income.analyze import main as income_main
+        from simplifi.income.analyze import main as income_main
         income_main()
         return
     if sub == "networth":
         if len(argv) < 2:
-            print("Usage: python3 -m simplifiapi networth {convert|analyze|update} [options]", file=sys.stderr)
+            print("Usage: python3 -m simplifi networth {convert|analyze|update} [options]", file=sys.stderr)
             print("  convert   Wide CSV -> long CSV    analyze   Report on long CSV    update   API -> append/overwrite today", file=sys.stderr)
             sys.exit(1)
         nw_cmd = argv[1].lower()
@@ -175,13 +218,13 @@ def main():
             sys.exit(1)
         sys.argv = [sys.argv[0]] + argv[2:]
         if nw_cmd == "convert":
-            from simplifiapi.networth.convert import main as convert_main
+            from simplifi.networth.convert import main as convert_main
             convert_main()
         elif nw_cmd == "analyze":
-            from simplifiapi.networth.analyze import main as analyze_main
+            from simplifi.networth.analyze import main as analyze_main
             analyze_main()
         else:
-            from simplifiapi.networth.update import main as update_main
+            from simplifi.networth.update import main as update_main
             sys.exit(update_main())
         return
     if sub in ("help", "h"):

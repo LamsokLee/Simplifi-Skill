@@ -13,7 +13,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from simplifiapi.client import Client, load_cached_token
+from simplifi.api import Client
+from simplifi.login.auth import load_cached_token
 
 AGGREGATE_CATEGORIES = [
     "cash_and_checking", "savings", "other_banking", "brokerage",

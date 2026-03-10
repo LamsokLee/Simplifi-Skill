@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OpenClaw skill entry: run simplifiapi with config from environment.
+# OpenClaw skill entry: run simplifi with config from environment.
 # Config (from OpenClaw vault/config) is typically passed as env vars:
 #   SIMPLIFI_TOKEN, or SIMPLIFI_EMAIL + SIMPLIFI_PASSWORD
 #   SIMPLIFI_EXPORT_FORMAT, SIMPLIFI_EXPORT_FILENAME
@@ -7,7 +7,7 @@
 
 set -e
 
-# Run from repo root; PYTHONPATH so "python3 -m simplifiapi" works without pip install
+# Run from repo root; PYTHONPATH so "python3 -m simplifi" works without pip install
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
@@ -34,13 +34,13 @@ ARGS+=(--filename="${SIMPLIFI_EXPORT_FILENAME:-data/output}")
 ARGS+=(--format="${SIMPLIFI_EXPORT_FORMAT:-json}")
 
 # Run Simplifi API (fetch accounts, transactions, etc.)
-python3 -m simplifiapi "${ARGS[@]}"
+python3 -m simplifi "${ARGS[@]}"
 
 # Optional: update net-worth file with latest balances from API (append or overwrite today's row)
 NETWORTH_FILE="${SIMPLIFI_NETWORTH_FILE:-data/net_worth.csv}"
 if [[ -n "${SIMPLIFI_NETWORTH_UPDATE:-}" ]]; then
   echo "--- Net Worth Update ---" >&2
-  python3 -m simplifiapi networth update "$REPO_ROOT/$NETWORTH_FILE"
+  python3 -m simplifi networth update "$REPO_ROOT/$NETWORTH_FILE"
 fi
 
 # Optional: run net-worth analysis if requested and file exists
@@ -53,7 +53,7 @@ if [[ -n "${SIMPLIFI_NETWORTH:-}" ]]; then
     [[ -n "${SIMPLIFI_NETWORTH_MONTHLY:-}" ]] && NW_ARGS+=(--monthly)
     [[ -n "${SIMPLIFI_NETWORTH_QUARTERLY:-}" ]] && NW_ARGS+=(--quarterly)
     [[ -n "${SIMPLIFI_NETWORTH_YEARLY:-}" ]] && NW_ARGS+=(--yearly)
-    python3 -m simplifiapi networth analyze "${NW_ARGS[@]}"
+    python3 -m simplifi networth analyze "${NW_ARGS[@]}"
   else
     echo "Net worth file not found: $NETWORTH_FILE (set SIMPLIFI_NETWORTH_FILE to override)." >&2
   fi

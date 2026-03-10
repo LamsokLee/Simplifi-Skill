@@ -8,7 +8,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from simplifiapi.spending.analyze import (
+from simplifi.spending.analyze import (
     load_transactions,
     load_category_info,
     load_investment_account_ids,

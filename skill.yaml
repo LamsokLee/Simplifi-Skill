@@ -2,7 +2,7 @@
 # https://docs.openclaw.ai/tools/creating-skills
 name: quicken-simplifi
 version: 1.0.0
-author: simplifiapi
+author: simplifi
 description: |
   Fetch accounts, transactions, tags, and categories from Quicken Simplifi.
   Supports login with token or email/password; on macOS can read 2FA codes

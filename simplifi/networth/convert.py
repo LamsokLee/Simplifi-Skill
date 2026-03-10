@@ -2,7 +2,7 @@
 """
 Convert wide Simplifi net-worth CSV (Account/Time, Subaccount, Concept, date columns)
 to long format: one row per day with columns date + category aggregates.
-Run once to create net_worth.csv; then use simplifiapi networth analyze on the long file.
+Run once to create net_worth.csv; then use simplifi networth analyze on the long file.
 """
 
 import argparse

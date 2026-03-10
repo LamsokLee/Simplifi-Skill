@@ -18,6 +18,7 @@ Use this skill when the user asks to:
 
 ```bash
 # Using the run script (easiest)
+./run login --email you@example.com
 ./run fetch --transactions --format=csv
 ./run spending
 ./run income
@@ -29,15 +30,15 @@ Use this skill when the user asks to:
 
 Or with Python directly:
 ```bash
-python3 -m simplifiapi fetch --token="YOUR_TOKEN" --transactions --format=csv
-python3 -m simplifiapi spending --from 2025-01-01
-python3 -m simplifiapi income
-python3 -m simplifiapi networth convert "Simplifi - net-worth.csv" -o data/net_worth.csv
-python3 -m simplifiapi networth analyze data/net_worth.csv --monthly
-python3 -m simplifiapi networth update
+python3 -m simplifi fetch --token="YOUR_TOKEN" --transactions --format=csv
+python3 -m simplifi spending --from 2025-01-01
+python3 -m simplifi income
+python3 -m simplifi networth convert "Simplifi - net-worth.csv" -o data/net_worth.csv
+python3 -m simplifi networth analyze data/net_worth.csv --monthly
+python3 -m simplifi networth update
 ```
 
-**Subcommands:** `fetch` (API download), `spending` (transaction/expense analysis), `income` (income-only analysis), `networth convert|analyze|update`. Run `python3 -m simplifiapi --help` or `./run --help` for a short guide; run any subcommand with `--help` for its options.
+**Subcommands:** `login` (log in and cache token), `fetch` (API download), `spending`, `income`, `networth convert|analyze|update`. Run `python3 -m simplifi --help` or `./run --help` for a short guide; run any subcommand with `--help` for its options.
 
 **As OpenClaw skill:** Install the skill and set config (token or email/password). The skill entry point is `skill/run.sh`; OpenClaw runs it with config as environment variables.
 
@@ -61,7 +62,7 @@ All exports and inputs use the **data/** folder by default. Exports are written 
 
 The skill expects a **long-format** net-worth file: one row per day, with header `date` plus category columns (e.g. `date,cash_and_checking,savings,...,net_worth`). The analyzer shows a summary, current value by category, and either a daily table (all dates × categories) or, when using `--monthly`/`--quarterly`/`--yearly`, one row per period with all category values.
 
-**Repo structure:** Code under **simplifiapi/**; **data/** holds exports and net-worth CSV by default. Invoke via `./run <subcommand>` or `python3 -m simplifiapi <subcommand>`.
+**Repo structure:** **simplifi/api/** = Simplifi HTTP client; **simplifi/login/** = auth and token cache; **simplifi/spending/**, **income/**, **networth/** = analysis scripts; **data/** = default exports and net-worth CSV. Invoke via `./run <subcommand>` or `python3 -m simplifi <subcommand>`.
 
 **One-time setup:** Convert a wide Simplifi net-worth export to long format (writes to `data/net_worth.csv` by default):
 ```bash

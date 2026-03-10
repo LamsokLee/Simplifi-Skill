@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Analyze net-worth from long-format CSV (date, net_worth or date + category columns).
-Use simplifiapi networth convert to create long format from a wide Simplifi export.
+Use simplifi networth convert to create long format from a wide Simplifi export.
 """
 
 import argparse
@@ -77,7 +77,7 @@ def load_networth_long(path: str | Path) -> tuple[list[tuple[datetime, dict[str,
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Analyze net-worth from long-format CSV. Use simplifiapi networth convert to create long format from wide export.",
+        description="Analyze net-worth from long-format CSV. Use simplifi networth convert to create long format from wide export.",
     )
     parser.add_argument("csv_file", nargs="?", default="data/net_worth.csv", help="Path to long-format net-worth CSV (default: data/net_worth.csv)")
     parser.add_argument("--from", dest="from_date", metavar="YYYY-MM-DD", help="Start of date range")
@@ -97,7 +97,7 @@ def main() -> None:
 
     loaded = load_networth_long(path)
     if loaded is None:
-        print("Error: file is not long format. Use: python3 -m simplifiapi networth convert <wide.csv> -o net_worth.csv", file=sys.stderr)
+        print("Error: file is not long format. Use: python3 -m simplifi networth convert <wide.csv> -o net_worth.csv", file=sys.stderr)
         sys.exit(1)
     rows_long, category_columns = loaded
     filtered_rows = [(d, row) for d, row in rows_long if (from_dt is None or d.date() >= from_dt.date()) and (to_dt is None or d.date() <= to_dt.date())]

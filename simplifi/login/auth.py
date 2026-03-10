@@ -9,7 +9,7 @@ import sqlite3
 import time
 import uuid
 
-logger = logging.getLogger("simplifiapi")
+logger = logging.getLogger("simplifi")
 
 # Apple epoch (2001-01-01) for chat.db date comparison
 _APPLE_EPOCH_SEC = 978307200
@@ -19,7 +19,7 @@ def _token_cache_path():
     path = os.environ.get("SIMPLIFI_TOKEN_FILE")
     if path:
         return os.path.expanduser(path)
-    # Repo root: simplifiapi/login/auth.py -> parent of simplifiapi = repo root
+    # Repo root: simplifi/login/auth.py -> parent of simplifi = repo root
     this_file = os.path.abspath(__file__)
     repo_root = os.path.dirname(os.path.dirname(os.path.dirname(this_file)))
     return os.path.join(repo_root, "token")

@@ -2,14 +2,14 @@ import logging
 import requests
 from urllib.parse import urljoin
 
-from simplifiapi.login.auth import (
+from simplifi.login.auth import (
     get_token as _login_get_token,
     load_cached_token,
     save_cached_token,
     verify_token as _login_verify_token,
 )
 
-logger = logging.getLogger("simplifiapi")
+logger = logging.getLogger("simplifi")
 
 SIMPLIFI_ENDPOINT = "https://services.quicken.com"
 

@@ -1,6 +1,6 @@
 ---
 name: quicken-simplifi
-description: Fetches accounts, transactions, tags, and categories from Quicken Simplifi. Use when the user wants to export Simplifi data, sync transactions, analyze net worth, or work with Quicken Simplifi.
+description: Fetches accounts, transactions, tags, and categories from Quicken Simplifi. Use when the user wants to export Simplifi data, sync transactions, analyze spending (by parent category with gross/refunds/net), analyze income (positive/negative/NET), analyze net worth, or work with Quicken Simplifi.
 ---
 
 # Quicken Simplifi skill
@@ -8,6 +8,8 @@ description: Fetches accounts, transactions, tags, and categories from Quicken S
 Use this skill when the user asks to:
 - Export or fetch Quicken Simplifi transactions, accounts, tags, or categories
 - Sync or download Simplifi data
+- Analyze spending (by parent category: gross expense, refunds, net expense)
+- Analyze income (positive, negative, and NET by category and month; includes returns/adjustments)
 - Update net worth (append or overwrite today’s row in net-worth CSV from API)
 - Analyze Simplifi net worth (from exported net-worth CSV)
 - Use Simplifi data for analysis or backup
@@ -19,18 +21,18 @@ Use this skill when the user asks to:
 ```bash
 # Using the run script (easiest)
 ./run login --email you@example.com
-./run fetch --transactions --format=csv
+./run fetch --transactions
 ./run spending
 ./run income
 ./run networth convert "Simplifi - net-worth.csv" -o data/networth_history.csv
 ./run networth analyze
 ./run networth update
 ```
-(Defaults use the **data/** folder: fetch → `data/output_*.json|csv`, spending/income → `data/output_transactions.csv` + `data/output_accounts.json` + `data/output_categories.json`, networth → `data/networth_history.csv`.)
+(Defaults use the **data/** folder: fetch writes transactions as CSV (`data/output_transactions.csv`), accounts/categories/tags as JSON; spending/income read those files; networth → `data/networth_history.csv`.)
 
 Or with Python directly:
 ```bash
-python3 -m simplifi fetch --token="YOUR_TOKEN" --transactions --format=csv
+python3 -m simplifi fetch --token="YOUR_TOKEN" --transactions
 python3 -m simplifi spending --from 2025-01-01
 python3 -m simplifi income
 python3 -m simplifi networth convert "Simplifi - net-worth.csv" -o data/networth_history.csv
@@ -46,17 +48,21 @@ python3 -m simplifi networth update
 - `SIMPLIFI_TOKEN` – OAuth token (no MFA prompt), or
 - `SIMPLIFI_EMAIL` + `SIMPLIFI_PASSWORD` – login (2FA from iMessage on macOS if available)
 - `SIMPLIFI_TRANSACTIONS=1`, `SIMPLIFI_ACCOUNTS=1`, `SIMPLIFI_TAGS=1`, `SIMPLIFI_CATEGORIES=1` – which data to fetch (default is transactions)
-- `SIMPLIFI_EXPORT_FILENAME` – output file prefix (default `data/output` → `data/output_*.json|csv`)
-- `SIMPLIFI_EXPORT_FORMAT` – `json` or `csv` (default `csv`)
+- `SIMPLIFI_EXPORT_FILENAME` – output file prefix (default `data/output`; transactions→CSV, accounts/categories/tags→JSON)
 - `SIMPLIFI_NETWORTH=1` – also run net-worth analysis on the long-format file
 - `SIMPLIFI_NETWORTH_FILE` – path to long-format net-worth CSV (default `data/networth_history.csv`)
 - `SIMPLIFI_NETWORTH_FROM`, `SIMPLIFI_NETWORTH_TO` – date range for net-worth (YYYY-MM-DD)
 - `SIMPLIFI_NETWORTH_MONTHLY=1`, `SIMPLIFI_NETWORTH_QUARTERLY=1`, `SIMPLIFI_NETWORTH_YEARLY=1` – show monthly, quarterly, or yearly net-worth summary (with category breakdown per period; skips daily point-by-point table)
 - `SIMPLIFI_NETWORTH_UPDATE=1` – update the net-worth file with latest balances from the API (append a new row for today, or overwrite existing row for today)
 
+## Spending and income analysis
+
+- **Spending** (`./run spending`): Reports by parent category with **gross expense**, **refunds**, and **net expense**; also income by parent category. Uses `data/output_transactions.csv`, `data/output_accounts.json`, `data/output_categories.json`.
+- **Income** (`./run income`): Shows **positive** (income received), **negative** (returns/adjustments in income categories), and **NET** (positive − negative) by category and by month. Gives an accurate picture of actual income after refunds, chargebacks, or corrections.
+
 ## Output and data folder
 
-All exports and inputs use the **data/** folder by default. Exports are written as `{filename}_{accounts|transactions|tags|categories}.{json|csv}` (default prefix `data/output`). Spending and income read `data/output_transactions.csv`, `data/output_accounts.json`, `data/output_categories.json`. Net-worth uses `data/networth_history.csv`. The directory is created automatically when writing.
+All exports and inputs use the **data/** folder by default. Fetch writes transactions as CSV and accounts/categories/tags as JSON (prefix `data/output`). Spending and income read `data/output_transactions.csv`, `data/output_accounts.json`, `data/output_categories.json`. Net-worth uses `data/networth_history.csv`. The directory is created automatically when writing.
 
 ## Net-worth analysis
 

@@ -2,6 +2,7 @@
 """
 Income-only analysis from output_transactions.csv.
 Uses same data as spending; prints only income-related sections.
+Shows both positive (income) and negative (returns/adjustments) values with NET totals.
 """
 
 import argparse
@@ -21,7 +22,7 @@ from simplifi.spending.analyze import (
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Income-only analysis from output_transactions.csv"
+        description="Income-only analysis from output_transactions.csv (with NET values)"
     )
     parser.add_argument(
         "csv_file",
@@ -82,14 +83,22 @@ def main() -> None:
     )
     by_month = analyze_by_month(rows, min_amount=args.min_amount)
 
-    # Income items only
+    # Income items only - calculate NET values
     income_items = []
     for cid, d in by_cat.items():
         if cid not in category_info or category_info[cid]["type"] != "INCOME":
             continue
-        income_items.append((category_info[cid]["name"], d))
+        net = d["income"] - d["expense"]
+        income_items.append((category_info[cid]["name"], {
+            "positive": d["income"],
+            "negative": d["expense"],
+            "net": net,
+            "count": d["count"]
+        }))
 
-    total_income = sum(d["income"] for _, d in income_items)
+    total_positive = sum(d["positive"] for _, d in income_items)
+    total_negative = sum(d["negative"] for _, d in income_items)
+    total_net = total_positive - total_negative
 
     print_section("Income overview")
     if args.from_date or args.to_date:
@@ -100,19 +109,22 @@ def main() -> None:
             dr.append(f"to {args.to_date}")
         print(f"  Date range: {' '.join(dr)}")
     print(f"  Total transactions: {len(rows)}")
-    print(f"  Total income: {total_income:,.2f}")
+    print(f"  Total positive:  {total_positive:,.2f}")
+    print(f"  Total negative:  {total_negative:,.2f}")
+    print(f"  NET income:      {total_net:,.2f}")
 
     print_section("By category (Income)")
-    print(f"  {'Category':<45} {'Income':>12} {'Count':>6}")
-    print("  " + "-" * 65)
-    for name, d in sorted(income_items, key=lambda x: -x[1]["income"])[: args.categories]:
-        print(f"  {name:<45} {d['income']:>12,.2f} {d['count']:>6}")
+    print(f"  {'Category':<40} {'Positive':>12} {'Negative':>12} {'NET':>12} {'Count':>6}")
+    print("  " + "-" * 82)
+    for name, d in sorted(income_items, key=lambda x: -x[1]["net"])[: args.categories]:
+        print(f"  {name:<40} {d['positive']:>12,.2f} {d['negative']:>12,.2f} {d['net']:>12,.2f} {d['count']:>6}")
 
     print_section("By month (income)")
-    print(f"  {'Month':<10} {'Income':>14} {'Count':>8}")
-    print("  " + "-" * 34)
+    print(f"  {'Month':<10} {'Positive':>14} {'Negative':>14} {'NET':>14} {'Count':>8}")
+    print("  " + "-" * 60)
     for month, d in by_month.items():
-        print(f"  {month:<10} {d['income']:>14,.2f} {d['count']:>8}")
+        net = d["income"] - d["expense"]
+        print(f"  {month:<10} {d['income']:>14,.2f} {d['expense']:>14,.2f} {net:>14,.2f} {d['count']:>8}")
 
 
 if __name__ == "__main__":

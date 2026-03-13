@@ -5,9 +5,9 @@ version: 1.0.0
 author: simplifi
 description: |
   Fetch accounts, transactions, tags, and categories from Quicken Simplifi.
-  Supports login with token or email/password; on macOS can read 2FA codes
-  from Apple iMessage. Use when the user wants Simplifi data, export
-  transactions, or sync with Quicken Simplifi.
+  Analyze spending (by parent category: gross, refunds, net) and income
+  (positive, negative, NET by category and month). Update and analyze net worth.
+  Login with token or email/password; on macOS can read 2FA from iMessage.
 license: MIT
 
 permissions:

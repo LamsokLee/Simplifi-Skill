@@ -2,7 +2,7 @@
 # OpenClaw skill entry: run simplifi with config from environment.
 # Config (from OpenClaw vault/config) is typically passed as env vars:
 #   SIMPLIFI_TOKEN, or SIMPLIFI_EMAIL + SIMPLIFI_PASSWORD
-#   SIMPLIFI_EXPORT_FORMAT, SIMPLIFI_EXPORT_FILENAME
+#   SIMPLIFI_EXPORT_FILENAME
 #   SIMPLIFI_ACCOUNTS, SIMPLIFI_TRANSACTIONS, SIMPLIFI_TAGS, SIMPLIFI_CATEGORIES (set to 1 to enable)
 
 set -e
@@ -31,9 +31,8 @@ HAVE_DATA=0
 [[ "$HAVE_DATA" -eq 0 ]] && ARGS+=(--transactions)
 
 ARGS+=(--filename="${SIMPLIFI_EXPORT_FILENAME:-data/output}")
-ARGS+=(--format="${SIMPLIFI_EXPORT_FORMAT:-csv}")
 
-# Run Simplifi API (fetch accounts, transactions, etc.)
+# Run Simplifi API: fetch writes transactions as CSV, accounts/categories/tags as JSON
 python3 -m simplifi "${ARGS[@]}"
 
 # Optional: update net-worth file with latest balances from API (append or overwrite today's row)

@@ -39,7 +39,7 @@ Or: `python3 -m simplifi <subcommand> [options]`. Run `./run --help` or `python3
 ## Repo layout
 
 - **simplifi/** — Python package: **api/** (Simplifi HTTP client), **login/** (auth, token cache), **spending/**, **income/**, **networth/** (analysis scripts), **cli.py** (entry)
-- **data/** — Default location for exports and net-worth CSV (`data/output_*.json|csv`, `data/networth_history.csv`); created automatically
+- **data/** — Default location for exports (transactions=CSV, accounts/categories/tags=JSON) and net-worth CSV (`data/networth_history.csv`); created automatically
 - **skill/** — OpenClaw skill entry script
 - **run** — Convenience script: `./run <subcommand> [options]`
 - **README.md**, **SKILL.md**, **skill.yaml**, **requirements.txt**

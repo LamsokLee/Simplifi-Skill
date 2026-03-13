@@ -11,9 +11,6 @@ from simplifi.login.auth import load_cached_token
 
 logger = logging.getLogger("simplifi")
 
-JSON_FORMAT = "json"
-CSV_FORMAT = "csv"
-
 _SUBCOMMANDS = ("login", "fetch", "spending", "income", "networth")
 _NETWORTH_CMDS = ("convert", "analyze", "update")
 
@@ -30,7 +27,7 @@ def _print_usage():
     print()
     print("Examples:")
     print("  python3 -m simplifi login --email you@example.com")
-    print("  python3 -m simplifi fetch --transactions --format=csv")
+    print("  python3 -m simplifi fetch --transactions")
     print("  python3 -m simplifi spending --from 2025-01-01")
     print("  python3 -m simplifi income")
     print("  python3 -m simplifi networth convert 'Simplifi - net-worth.csv' -o data/networth_history.csv")
@@ -78,24 +75,22 @@ def parse_arguments(args):
     # Export
     parser.add_argument('--filename',
                         default="data/output",
-                        help="Write results to this path prefix (default: data/output -> data/output_*.json|csv)")
-    parser.add_argument('--format',
-                        choices=[JSON_FORMAT, CSV_FORMAT],
-                        default=CSV_FORMAT,
-                        help="The format used to return data (default: csv).")
+                        help="Write results to this path prefix (default: data/output; transactions=CSV, accounts/categories/tags=JSON)")
 
     return parser.parse_args(args)
 
 
 def write_data(options, data, name):
-    filename = "{}_{}.{}".format(options.filename, name, options.format)
+    # Transactions: CSV (for analysis). Accounts, categories, tags: JSON.
+    ext = "csv" if name == "transactions" else "json"
+    filename = "{}_{}.{}".format(options.filename, name, ext)
     logger.warn("Saving {} to {}".format(name, filename))
     dirname = os.path.dirname(filename)
     if dirname:
         os.makedirs(dirname, exist_ok=True)
-    if options.format == CSV_FORMAT:
+    if ext == "csv":
         json_normalize(data).to_csv(filename, index=False)
-    elif options.format == JSON_FORMAT:
+    else:
         with open(filename, "w+") as f:
             json.dump(data, f, indent=2)
 

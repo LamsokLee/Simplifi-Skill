@@ -309,11 +309,18 @@ def print_category_expense_income_sections(
     parent_expense = defaultdict(lambda: {"gross": 0.0, "refunds": 0.0, "net": 0.0, "count": 0})
     parent_income = defaultdict(lambda: {"income": 0.0, "count": 0})
     
+    # Categories to exclude from spending analysis (investment transfers)
+    excluded_categories = {"Investments", "Investment", "INVESTMENTS", "INVESTMENT"}
+    
     for cid, d in by_cat.items():
         if cid not in category_info:
             continue
         info = category_info[cid]
         parent_name = get_parent_category_name(cid, category_info)
+        
+        # Skip investment categories in spending analysis
+        if parent_name in excluded_categories:
+            continue
         
         if info["type"] == "EXPENSE":
             # Calculate net spending (expense - income/refunds)

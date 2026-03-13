@@ -286,17 +286,17 @@ def print_category_summary(by_cat: dict, limit: int = 25) -> None:
     total_expense = sum(d["expense"] for d in by_cat.values())
     print(f"  Total income:  {total_income:,.2f}")
     print(f"  Total expense: {total_expense:,.2f}")
-    print(f"  Net:           {total_income - total_expense:,.2f}")
     print()
     sorted_cats = sorted(
         by_cat.items(),
-        key=lambda x: (x[1]["expense"], x[1]["income"]),
+        key=lambda x: (x[1]["expense"] - x[1]["income"], x[1]["expense"], x[1]["income"]),
         reverse=True,
     )[:limit]
-    print(f"  {'Category':<45} {'Expense':>12} {'Income':>12} {'Count':>6}")
-    print("  " + "-" * 75)
+    print(f"  {'Category':<45} {'Value':>12} {'Count':>6}")
+    print("  " + "-" * 65)
     for cat, d in sorted_cats:
-        print(f"  {cat:<45} {d['expense']:>12,.2f} {d['income']:>12,.2f} {d['count']:>6}")
+        net = d["expense"] - d["income"]
+        print(f"  {cat:<45} {net:>12,.2f} {d['count']:>6}")
 
 
 def print_category_expense_income_sections(
@@ -331,15 +331,13 @@ def print_category_expense_income_sections(
     print_section("By category (Expense)")
     total_gross = sum(d["gross"] for d in parent_expense.values())
     total_refunds = sum(d["refunds"] for d in parent_expense.values())
-    total_net = sum(d["net"] for d in parent_expense.values())
     print(f"  Total gross expense: {total_gross:,.2f}")
     print(f"  Total refunds:       {total_refunds:,.2f}")
-    print(f"  Total net expense:   {total_net:,.2f}")
     print()
-    print(f"  {'Category':<45} {'Gross':>12} {'Refunds':>12} {'Net':>12} {'Count':>6}")
-    print("  " + "-" * 95)
+    print(f"  {'Category':<45} {'Value':>12} {'Count':>6}")
+    print("  " + "-" * 65)
     for name, d in sorted(parent_expense.items(), key=lambda x: -x[1]["net"])[:limit]:
-        print(f"  {name:<45} {d['gross']:>12,.2f} {d['refunds']:>12,.2f} {d['net']:>12,.2f} {d['count']:>6}")
+        print(f"  {name:<45} {d['net']:>12,.2f} {d['count']:>6}")
 
     print_section("By category (Income)")
     total_inc = sum(d["income"] for d in parent_income.values())

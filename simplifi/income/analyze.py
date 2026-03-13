@@ -2,7 +2,7 @@
 """
 Income-only analysis from output_transactions.csv.
 Uses same data as spending; prints only income-related sections.
-Shows both positive (income) and negative (returns/adjustments) values with NET totals.
+Category and month tables show net value (income minus returns/adjustments) as the single value.
 """
 
 import argparse
@@ -98,7 +98,6 @@ def main() -> None:
 
     total_positive = sum(d["positive"] for _, d in income_items)
     total_negative = sum(d["negative"] for _, d in income_items)
-    total_net = total_positive - total_negative
 
     print_section("Income overview")
     if args.from_date or args.to_date:
@@ -111,20 +110,19 @@ def main() -> None:
     print(f"  Total transactions: {len(rows)}")
     print(f"  Total positive:  {total_positive:,.2f}")
     print(f"  Total negative:  {total_negative:,.2f}")
-    print(f"  NET income:      {total_net:,.2f}")
 
     print_section("By category (Income)")
-    print(f"  {'Category':<40} {'Positive':>12} {'Negative':>12} {'NET':>12} {'Count':>6}")
-    print("  " + "-" * 82)
+    print(f"  {'Category':<40} {'Value':>12} {'Count':>6}")
+    print("  " + "-" * 60)
     for name, d in sorted(income_items, key=lambda x: -x[1]["net"])[: args.categories]:
-        print(f"  {name:<40} {d['positive']:>12,.2f} {d['negative']:>12,.2f} {d['net']:>12,.2f} {d['count']:>6}")
+        print(f"  {name:<40} {d['net']:>12,.2f} {d['count']:>6}")
 
     print_section("By month (income)")
-    print(f"  {'Month':<10} {'Positive':>14} {'Negative':>14} {'NET':>14} {'Count':>8}")
-    print("  " + "-" * 60)
+    print(f"  {'Month':<10} {'Value':>14} {'Count':>8}")
+    print("  " + "-" * 34)
     for month, d in by_month.items():
         net = d["income"] - d["expense"]
-        print(f"  {month:<10} {d['income']:>14,.2f} {d['expense']:>14,.2f} {net:>14,.2f} {d['count']:>8}")
+        print(f"  {month:<10} {net:>14,.2f} {d['count']:>8}")
 
 
 if __name__ == "__main__":

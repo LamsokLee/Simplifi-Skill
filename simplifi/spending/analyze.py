@@ -51,7 +51,7 @@ def load_category_names(categories_path: str | Path) -> dict[str, str]:
 
 
 def load_category_info(categories_path: str | Path) -> dict[str, dict]:
-    """Load output_categories.json; return map of category id -> { name, type } (EXPENSE/INCOME)."""
+    """Load output_categories.json; return map of category id -> { name, type, parent } (EXPENSE/INCOME)."""
     path = Path(categories_path)
     if not path.exists():
         return {}
@@ -67,13 +67,31 @@ def load_category_info(categories_path: str | Path) -> dict[str, dict]:
         if not c.get("id"):
             continue
         cid = str(c["id"])
+        parent_id = str(c.get("parentId", "")) if c.get("parentId") else None
         out[cid] = {
             "name": (c.get("name") or "").strip() or cid,
             "type": (c.get("categoryType") or "EXPENSE").strip().upper() or "EXPENSE",
+            "parent": parent_id,
         }
         if out[cid]["type"] not in ("EXPENSE", "INCOME"):
             out[cid]["type"] = "EXPENSE"
     return out
+
+
+def get_parent_category_name(cat_id: str, category_info: dict[str, dict]) -> str:
+    """Get the ultimate parent category name for a category ID."""
+    if not cat_id or cat_id not in category_info:
+        return "Uncategorized"
+    
+    info = category_info[cat_id]
+    parent_id = info.get("parent")
+    
+    # If no parent or parent is "0", this is a parent category
+    if not parent_id or parent_id == "0":
+        return info["name"]
+    
+    # Recursively find the ultimate parent
+    return get_parent_category_name(parent_id, category_info)
 
 
 def get_category_label(row: dict, category_names: dict[str, str] | None = None) -> str:
@@ -286,34 +304,50 @@ def print_category_expense_income_sections(
     category_info: dict[str, dict],
     limit: int = 25,
 ) -> None:
-    """Print By category (Expense) and By category (Income) sections."""
-    expense_items = []
-    income_items = []
+    """Print By category (Expense) and By category (Income) sections, grouped by parent category."""
+    # Aggregate by parent category
+    parent_expense = defaultdict(lambda: {"gross": 0.0, "refunds": 0.0, "net": 0.0, "count": 0})
+    parent_income = defaultdict(lambda: {"income": 0.0, "count": 0})
+    
     for cid, d in by_cat.items():
         if cid not in category_info:
             continue
         info = category_info[cid]
+        parent_name = get_parent_category_name(cid, category_info)
+        
         if info["type"] == "EXPENSE":
-            expense_items.append((info["name"], d))
+            # Calculate net spending (expense - income/refunds)
+            gross = d["expense"]
+            refunds = d["income"]
+            net = gross - refunds
+            parent_expense[parent_name]["gross"] += gross
+            parent_expense[parent_name]["refunds"] += refunds
+            parent_expense[parent_name]["net"] += net
+            parent_expense[parent_name]["count"] += d["count"]
         else:
-            income_items.append((info["name"], d))
+            parent_income[parent_name]["income"] += d["income"]
+            parent_income[parent_name]["count"] += d["count"]
 
     print_section("By category (Expense)")
-    total_exp = sum(d["expense"] for _, d in expense_items)
-    print(f"  Total expense: {total_exp:,.2f}")
+    total_gross = sum(d["gross"] for d in parent_expense.values())
+    total_refunds = sum(d["refunds"] for d in parent_expense.values())
+    total_net = sum(d["net"] for d in parent_expense.values())
+    print(f"  Total gross expense: {total_gross:,.2f}")
+    print(f"  Total refunds:       {total_refunds:,.2f}")
+    print(f"  Total net expense:   {total_net:,.2f}")
     print()
-    print(f"  {'Category':<45} {'Expense':>12} {'Count':>6}")
-    print("  " + "-" * 65)
-    for name, d in sorted(expense_items, key=lambda x: -x[1]["expense"])[:limit]:
-        print(f"  {name:<45} {d['expense']:>12,.2f} {d['count']:>6}")
+    print(f"  {'Category':<45} {'Gross':>12} {'Refunds':>12} {'Net':>12} {'Count':>6}")
+    print("  " + "-" * 95)
+    for name, d in sorted(parent_expense.items(), key=lambda x: -x[1]["net"])[:limit]:
+        print(f"  {name:<45} {d['gross']:>12,.2f} {d['refunds']:>12,.2f} {d['net']:>12,.2f} {d['count']:>6}")
 
     print_section("By category (Income)")
-    total_inc = sum(d["income"] for _, d in income_items)
+    total_inc = sum(d["income"] for d in parent_income.values())
     print(f"  Total income:  {total_inc:,.2f}")
     print()
     print(f"  {'Category':<45} {'Income':>12} {'Count':>6}")
     print("  " + "-" * 65)
-    for name, d in sorted(income_items, key=lambda x: -x[1]["income"])[:limit]:
+    for name, d in sorted(parent_income.items(), key=lambda x: -x[1]["income"])[:limit]:
         print(f"  {name:<45} {d['income']:>12,.2f} {d['count']:>6}")
 
 

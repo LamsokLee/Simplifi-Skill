@@ -1,6 +1,6 @@
 ---
 name: quicken-simplifi
-description: Fetches accounts, transactions, tags, and categories from Quicken Simplifi. Use when the user wants to export Simplifi data, sync transactions, analyze spending (by parent category with gross/refunds/net), analyze income (positive/negative/NET), analyze net worth, or work with Quicken Simplifi.
+description: Fetches accounts, transactions, tags, and categories from Quicken Simplifi. Use when the user wants to export Simplifi data, sync transactions, analyze spending (by parent category, net value per category), analyze income (net value per category and month), analyze net worth, or work with Quicken Simplifi.
 ---
 
 # Quicken Simplifi skill
@@ -8,8 +8,8 @@ description: Fetches accounts, transactions, tags, and categories from Quicken S
 Use this skill when the user asks to:
 - Export or fetch Quicken Simplifi transactions, accounts, tags, or categories
 - Sync or download Simplifi data
-- Analyze spending (by parent category: gross expense, refunds, net expense)
-- Analyze income (positive, negative, and NET by category and month; includes returns/adjustments)
+- Analyze spending (by parent category; one net value per category)
+- Analyze income (net value per category and per month; includes returns/adjustments)
 - Update net worth (append or overwrite today’s row in net-worth CSV from API)
 - Analyze Simplifi net worth (from exported net-worth CSV)
 - Use Simplifi data for analysis or backup
@@ -57,8 +57,8 @@ python3 -m simplifi networth update
 
 ## Spending and income analysis
 
-- **Spending** (`./run spending`): Reports by parent category with **gross expense**, **refunds**, and **net expense**; also income by parent category. Uses `data/output_transactions.csv`, `data/output_accounts.json`, `data/output_categories.json`.
-- **Income** (`./run income`): Shows **positive** (income received), **negative** (returns/adjustments in income categories), and **NET** (positive − negative) by category and by month. Gives an accurate picture of actual income after refunds, chargebacks, or corrections.
+- **Spending** (`./run spending`): Reports by parent category with a single **value** per category (net expense = gross − refunds). Overview shows total gross and total refunds; category table shows net value and count. Also income by parent category. Uses `data/output_transactions.csv`, `data/output_accounts.json`, `data/output_categories.json`.
+- **Income** (`./run income`): Overview shows total positive and total negative; category and month tables show a single **value** per row (net = positive − negative). Gives an accurate picture of actual income after refunds, chargebacks, or corrections.
 
 ## Output and data folder
 

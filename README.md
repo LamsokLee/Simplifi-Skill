@@ -46,6 +46,8 @@ Or: `python3 -m simplifi <subcommand> [options]`. Run `./run --help` or `python3
 
 ## CLI
 
+Spending and income analysis show one **value** per category (net); no separate gross/refund/net columns.
+
 ```shell
 # Subcommands: login, fetch (default), spending, income, networth convert|analyze|update
 python3 -m simplifi --help

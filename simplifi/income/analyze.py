@@ -22,7 +22,7 @@ from simplifi.spending.analyze import (
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Income-only analysis from output_transactions.csv (with NET values)"
+        description="Income-only analysis from output_transactions.csv (net value per category and month)"
     )
     parser.add_argument(
         "csv_file",
@@ -83,7 +83,7 @@ def main() -> None:
     )
     by_month = analyze_by_month(rows, min_amount=args.min_amount)
 
-    # Income items only - calculate NET values
+    # Income items only - net = income − expense (returns/adjustments)
     income_items = []
     for cid, d in by_cat.items():
         if cid not in category_info or category_info[cid]["type"] != "INCOME":

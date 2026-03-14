@@ -210,7 +210,10 @@ def verify_token(session, token) -> bool:
     )
     if r.status_code != 200:
         logger.error("Error code: %s", r.status_code)
-        logger.error(r.json())
+        try:
+            logger.error(r.json())
+        except Exception:
+            logger.error("Response body: %s", r.text[:500] if r.text else "(empty)")
         return False
     data = r.json()
     userId = data.get("id")

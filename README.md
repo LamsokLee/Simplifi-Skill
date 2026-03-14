@@ -20,11 +20,13 @@ Set config (token or email/password), then trigger with keywords like *simplifi*
 
 ## Run locally (no OpenClaw)
 
-Install deps and run everything through one CLI:
+Install deps and run everything through one CLI. On macOS (Homebrew Python), use a venv so installs don’t hit “externally-managed-environment”:
 
 ```shell
-pip install -r requirements.txt
+python3 -m venv venv
+./venv/bin/pip install -r requirements.txt
 ./run login --email you@example.com
+./run login --verify          # verify cached token
 ./run fetch --transactions
 ./run spending
 ./run income
@@ -32,7 +34,8 @@ pip install -r requirements.txt
 ./run networth analyze
 ./run networth update
 ```
-(Defaults use the **data/** folder for exports and net-worth CSV.)
+
+`./run` uses `./venv/bin/python3` if it exists, otherwise `python3`. (Defaults use the **data/** folder for exports and net-worth CSV.)
 
 Or: `python3 -m simplifi <subcommand> [options]`. Run `./run --help` or `python3 -m simplifi --help` for subcommands.
 
@@ -52,6 +55,7 @@ Spending and income analysis show one **value** per category (net); no separate 
 # Subcommands: login, fetch (default), spending, income, networth convert|analyze|update
 python3 -m simplifi --help
 python3 -m simplifi login --email you@example.com
+python3 -m simplifi login --verify   # verify cached token only
 python3 -m simplifi fetch --help
 python3 -m simplifi fetch --transactions --format=csv
 python3 -m simplifi networth analyze --monthly

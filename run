@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # Single entry point for all Simplifi scripts. Run from repo root.
-# Usage: ./run fetch [options]  |  ./run spending [options]  |  ./run income [options]
+# Usage: ./run login [--verify] [options]
+#        ./run fetch [options]  |  ./run spending [options]  |  ./run income [options]
 #        ./run networth convert [options]  |  ./run networth analyze [options]  |  ./run networth update [options]
+# Uses ./venv/bin/python3 if present (so install deps there: python3 -m venv venv && ./venv/bin/pip install -r requirements.txt)
 set -e
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$REPO_ROOT"
 export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
-exec python3 -m simplifi "$@"
+PYTHON="${REPO_ROOT}/venv/bin/python3"
+[[ -x "$PYTHON" ]] || PYTHON=python3
+exec "$PYTHON" -m simplifi "$@"

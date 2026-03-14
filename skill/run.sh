@@ -2,6 +2,7 @@
 # OpenClaw skill entry: run simplifi with config from environment.
 # Config (from OpenClaw vault/config) is typically passed as env vars:
 #   SIMPLIFI_TOKEN, or SIMPLIFI_EMAIL + SIMPLIFI_PASSWORD
+#   SIMPLIFI_VERIFY=1 — run login --verify only (check cached token; no fetch)
 #   SIMPLIFI_EXPORT_FILENAME
 #   SIMPLIFI_ACCOUNTS, SIMPLIFI_TRANSACTIONS, SIMPLIFI_TAGS, SIMPLIFI_CATEGORIES (set to 1 to enable)
 
@@ -11,6 +12,12 @@ set -e
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
+
+# Verify-only mode: check cached token and exit (no fetch)
+if [[ -n "${SIMPLIFI_VERIFY:-}" ]]; then
+  python3 -m simplifi login --verify
+  exit
+fi
 
 ARGS=()
 if [[ -n "${SIMPLIFI_TOKEN:-}" ]]; then

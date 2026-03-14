@@ -19,7 +19,7 @@ def _print_usage():
     print("Usage: python3 -m simplifi <subcommand> [options]")
     print()
     print("Subcommands:")
-    print("  login       Log in to Simplifi (save token for fetch and other API use)")
+    print("  login       Log in to Simplifi (save token); use --verify to check cached token only")
     print("  fetch       Fetch data from Simplifi API (accounts, transactions, tags, categories)")
     print("  spending    Analyze transactions (expense/spending reports)")
     print("  income      Analyze transactions (income-only reports)")
@@ -27,6 +27,7 @@ def _print_usage():
     print()
     print("Examples:")
     print("  python3 -m simplifi login --email you@example.com")
+    print("  python3 -m simplifi login --verify")
     print("  python3 -m simplifi fetch --transactions")
     print("  python3 -m simplifi spending --from 2025-01-01")
     print("  python3 -m simplifi income")
@@ -101,9 +102,20 @@ def _run_login(argv):
     parser.add_argument("--email", nargs="?", default=None, help="Simplifi account email")
     parser.add_argument("--password", nargs="?", default=None, help="Simplifi account password")
     parser.add_argument("--token", nargs="?", default=None, help="Use existing token (verify and keep cached)")
+    parser.add_argument("--verify", action="store_true", help="Verify cached token only; exit 0 if valid, 1 if missing/invalid")
     parser.add_argument("--force", action="store_true", help="Re-login even if a valid token is cached")
     opts = parser.parse_args(argv)
     client = Client()
+    if opts.verify:
+        token = load_cached_token()
+        if not token:
+            print("No cached token found.", file=sys.stderr)
+            sys.exit(1)
+        if client.verify_token(token):
+            print("Token is valid.", file=sys.stderr)
+            return
+        print("Token is invalid or expired.", file=sys.stderr)
+        sys.exit(1)
     if opts.token:
         if client.verify_token(opts.token):
             save_cached_token(opts.token)

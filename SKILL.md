@@ -21,6 +21,7 @@ Use this skill when the user asks to:
 ```bash
 # Using the run script (easiest)
 ./run login --email you@example.com
+./run login --verify          # verify cached token only (exit 0 if valid)
 ./run fetch --transactions
 ./run spending
 ./run income
@@ -40,13 +41,14 @@ python3 -m simplifi networth analyze data/networth_history.csv --monthly
 python3 -m simplifi networth update
 ```
 
-**Subcommands:** `login` (log in and cache token), `fetch` (API download), `spending`, `income`, `networth convert|analyze|update`. Run `python3 -m simplifi --help` or `./run --help` for a short guide; run any subcommand with `--help` for its options.
+**Subcommands:** `login` (log in and cache token; use `login --verify` to check cached token only), `fetch` (API download), `spending`, `income`, `networth convert|analyze|update`. Run `python3 -m simplifi --help` or `./run --help` for a short guide; run any subcommand with `--help` for its options.
 
 **As OpenClaw skill:** Install the skill and set config (token or email/password). The skill entry point is `skill/run.sh`; OpenClaw runs it with config as environment variables.
 
 **Environment variables** (when run as a skill or by script):
 - `SIMPLIFI_TOKEN` – OAuth token (no MFA prompt), or
 - `SIMPLIFI_EMAIL` + `SIMPLIFI_PASSWORD` – login (2FA from iMessage on macOS if available)
+- `SIMPLIFI_VERIFY=1` – run `login --verify` only (check cached token; exit 0 if valid, 1 otherwise; no fetch)
 - `SIMPLIFI_TRANSACTIONS=1`, `SIMPLIFI_ACCOUNTS=1`, `SIMPLIFI_TAGS=1`, `SIMPLIFI_CATEGORIES=1` – which data to fetch (default is transactions)
 - `SIMPLIFI_EXPORT_FILENAME` – output file prefix (default `data/output`; transactions→CSV, accounts/categories/tags→JSON)
 - `SIMPLIFI_NETWORTH=1` – also run net-worth analysis on the long-format file

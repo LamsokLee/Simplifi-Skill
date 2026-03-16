@@ -156,11 +156,18 @@ def _run_fetch(argv):
     else:
         token = None
         if options.email and options.password:
-            token = client.get_token(
-                email=options.email, password=options.password
-            )
-        if not token or not client.verify_token(token):
-            logger.error("Unable to log in simplifi.")
+            # Retry login up to 3 times if token validation fails
+            max_retries = 3
+            for attempt in range(1, max_retries + 1):
+                token = client.get_token(
+                    email=options.email, password=options.password
+                )
+                if token and client.verify_token(token):
+                    break
+                logger.warning("Login attempt %d/%d failed, retrying...", attempt, max_retries)
+                token = None
+        if not token:
+            logger.error("Unable to log in simplifi after %d attempts.", max_retries)
             return
 
     # Retrieve first dataset
